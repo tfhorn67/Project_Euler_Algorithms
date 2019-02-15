@@ -39,53 +39,46 @@ Ideas: So, we could find the answer by elimination. Path length equals the encod
   grids of larger than ~10x10, performance drops off massively. Massively. We need a simpler
   solution. Possibly this could be reduced mathematically to a function of grid size, such that
   we only need to run a couple of operations rather than millions on millions.
+
+  I figured I did pretty well figuring out a clever, if slow, brute force solution and I've never
+  been good at combinatric analysis. So, I took to the internet for help problem solving this. From
+  what I can see, this problem, for a generalized grid size, can be taken as a subset of Pascal's
+  Triangle solutions, so we should be able to solve it using a programatic implementation of one of
+  the formulas for finding values in Pascal's Triangle . . .
+
+  So, yep, Pascal's Triangle is a very well understood combinatrics problem with many well defined
+  solutions. The one I'll implement is that the 'value' of any point (n, k) in the triangle, where
+  n = layer # in the triangle from top down and k = number of step from the left side of the
+  triangle can be taken as n!/(n!(n-k)!). This triangle can be rotated to align with our grid
+  system. From this alignment, we can see that (n, k) translates to n = the non back tracking
+  orthogonal path length from the origin to the destination and k = the horizontal distance from the
+  origin to the destination. In other words, for any point (x, y) on the grid,
+  (n, k) = ((|x|+|y|), |x|)
+
+  This solution is much faster and much more elegant.
 */
 
 //Solution . . .
 
-/*
-  generatePaths is adapted from a method for generating all binary numbers of n length that I found.
-  The bitwise operations paired with the looping is a bit confusing, but can be illuminated by
-  taking simple cases, like pathLength of 2 or 3 and stepping through the logic by hand.
-  I had to work this out on paper to understand how/why the method I found works.
-  Consider it good practice working with bitwise operands that aren't super duper common. At least
-  in typical JavaScript fair.
-*/
-function generatePaths(pathLength) {
-    let paths = 0; //to hold count of paths
-    //Math.pow(2,pathLength) generates the number of possible paths of length pathLength
-    //i.e Math.pow(2,4) ==> 16 paths of length 4, of which six lead to the correct destination.
-    for (let i = 0; i < Math.pow(2,pathLength); i++) {
-        var path = []; //to hold individual paths
-        for (let j = 0; j < pathLength; j++) {
-            //bitwise magic. lop of j bits from the right side of i then and it with 1
-            //basically, if i >> j ends in 1 in binary, return 1, else return 0
-            if ((i >> j) & 1) {
-                let temp = (i >> j) & 1;
-                path.push(1);
-            }
-            else {
-                path.push(0);
-            }
-        }
-        //filter invalid paths by only pushing paths with equal number of 1s and 0s
-        let balanceCount = 0
-        path.map(function(currentVal, index, array) {
-            if (currentVal === 1) {
-                balanceCount++;
-                //console.log(balanceCount);
-            } else {
-                balanceCount--
-                //console.log(balanceCount);
-            }
-        });
-        if (balanceCount === 0) {
-            paths++;
-        }
+//need to be able to take factorials
+function factorial(number) {
+    //for the safety
+    if (number < 0) {
+        return -1;
     }
-    return paths;
+    //0! = 1
+    if (number == 0) {
+        return 1;
+    }
+    //set up some recursive dominos. Knock them down once we get 0!.
+    if (number > 0) {
+        return (number * factorial(number-1));
+    }
 }
 
-let example = generatePaths(30);
-console.log(example);
-//console.log(example);
+//path length from origin to destination, along grid lines. horizontal distance as |x| from (x,y)
+function pascalsTriangle(pathLength, horizontalDistance) {
+    return ( factorial(pathLength) / (factorial(horizontalDistance) * factorial(pathLength - horizontalDistance)));
+}
+//return value of desired location.
+console.log(pascalsTriangle(40,20));
